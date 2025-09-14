@@ -2,6 +2,7 @@ import os
 from datetime import timedelta, datetime
 from typing import Optional
 import jwt
+from fastapi import HTTPException
 from passlib.context import CryptContext
 from fastapi.security import HTTPBearer
 from dotenv import load_dotenv
@@ -41,4 +42,21 @@ def authenticate_user(db: Session, email: str,password: str):
         return False
     return user
 
-def get_current_user():
+def get_current_user(db: Session, token: str):
+    credentials_exception = HTTPException(
+        status_code= 401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str= payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+    user = db.query(models.User).filter (models.User.email == email).first()
+    if not user:
+        raise credentials_exception
+    return user
