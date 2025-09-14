@@ -1,0 +1,6 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+alembic revision --autogenerate -m "create initial table"
+/venv/
+/.idea/

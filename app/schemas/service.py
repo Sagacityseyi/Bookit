@@ -1,0 +1,1 @@
+id, title, description, price, duration_minutes, is_active, created_at

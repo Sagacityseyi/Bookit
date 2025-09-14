@@ -1,0 +1,1 @@
+ id, booking_id, rating (1–5), comment, created_at
