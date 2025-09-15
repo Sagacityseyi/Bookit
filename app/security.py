@@ -4,12 +4,15 @@ from typing import Optional
 import jwt
 from fastapi import HTTPException
 from passlib.context import CryptContext
-from fastapi.security import HTTPBearer
+from fastapi.security import HTTPBearer, OAuth2PasswordBearer
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from app import models
 
 load_dotenv()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
