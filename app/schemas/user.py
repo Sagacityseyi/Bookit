@@ -33,9 +33,9 @@ class UserOut(BaseModel):
     id: UUID
     name: str
     email: EmailStr
-    roles: Role
+    #roles: Role
     created_at: datetime
-    is_active: bool
+    is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 

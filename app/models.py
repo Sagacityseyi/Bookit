@@ -16,7 +16,7 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False, default=uuid.uuid4)
     name = Column(String, nullable=False, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    role = Column(ENUM(Role), default=Role.USER)
+    role = Column(String, default=Role.USER)
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
@@ -47,7 +47,7 @@ class Booking(Base):
     service_id = Column(UUID(as_uuid=True), ForeignKey("services.id", ondelete="CASCADE"), nullable=False)
     start_time = Column(DateTime(timezone=True), nullable=False)  
     end_time = Column(DateTime(timezone=True), nullable=False)    
-    status = Column(ENUM(BookingStatus), default=BookingStatus.PENDING)
+    status = Column(String, default=BookingStatus.PENDING)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     
