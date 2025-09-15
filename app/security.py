@@ -1,8 +1,8 @@
 import os
 from datetime import timedelta, datetime
-from typing import Optional
+from typing import Optional, List
 import jwt
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from passlib.context import CryptContext
 from fastapi.security import HTTPBearer, OAuth2PasswordBearer
 from dotenv import load_dotenv
@@ -17,6 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+REFRESH_TOKEN_EXPIRES = int(os.getenv("REFRESH_TOKEN_EXPIRES", 10))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
@@ -27,7 +28,7 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def create_access_token(data: dict, expires_delta: Optional["timedelta"] = None):
+def create_token(data: dict, expires_delta: Optional["timedelta"] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now() + expires_delta
@@ -37,6 +38,18 @@ def create_access_token(data: dict, expires_delta: Optional["timedelta"] = None)
         encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encode_jwt
 
+def create_access_token(sub: str, roles: List[str]):
+    return create_token(
+        {"sub": sub, "roles": roles, "type": "access"},
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+
+def create_refresh_token(sub: str):
+    return create_token(
+        {"sub": sub, "type": "refresh"},
+        timedelta(days=REFRESH_TOKEN_EXPIRES),
+    )
+
 def authenticate_user(db: Session, email: str,password: str):
     user  = db.query(models.User).filter (models.User.email == email).first()
     if not user:
@@ -45,7 +58,7 @@ def authenticate_user(db: Session, email: str,password: str):
         return False
     return user
 
-def get_current_user(db: Session, token: str):
+def get_current_user(db: Session, token: str= Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code= 401,
         detail="Could not validate credentials",
@@ -54,11 +67,14 @@ def get_current_user(db: Session, token: str):
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "access":
+            raise credentials_exception
         email: str= payload.get("sub")
         if email is None:
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
+
     user = db.query(models.User).filter (models.User.email == email).first()
     if not user:
         raise credentials_exception

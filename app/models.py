@@ -1,10 +1,13 @@
 import uuid
+from sqlalchemy.dialects.mysql import ENUM
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Integer, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import Text
 from app.database import Base
+from app.schemas.booking import BookingStatus
+from app.schemas.user import Role
 
 
 class User(Base):
@@ -44,7 +47,7 @@ class Booking(Base):
     service_id = Column(UUID(as_uuid=True), ForeignKey("services.id", ondelete="CASCADE"), nullable=False)
     start_time = Column(DateTime(timezone=True), nullable=False)  
     end_time = Column(DateTime(timezone=True), nullable=False)    
-    status = Column(Enum(BookingStatus), default=BookingStatus.PENDING)
+    status = Column(ENUM(BookingStatus), default=BookingStatus.PENDING)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     

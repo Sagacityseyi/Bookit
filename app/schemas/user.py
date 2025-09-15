@@ -8,24 +8,16 @@ class Role(str, Enum):
     ADMIN = "admin"
     USER = "user"
 
-
 class UserBase(BaseModel):
     name: str
     email: EmailStr
 
-
 class UserCreate(UserBase):
     password: str
-
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
-
-
-class UserUpdate(BaseModel):
-    name: str | None = Field(None, min_length=2, max_length=50)
-    email: EmailStr | None = None
 
 
 class User(UserBase):
@@ -41,8 +33,17 @@ class UserOut(BaseModel):
     id: UUID
     name: str
     email: EmailStr
-    role: Role
+    roles: Role
     created_at: datetime
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: str | None = None
