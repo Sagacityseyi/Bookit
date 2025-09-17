@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from app import models
 from app.database import get_db
+from app.models import BlacklistedToken
 
 load_dotenv()
 
@@ -45,7 +46,7 @@ def create_access_token(sub: str, roles: List[str] = None) -> str:
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
-def create_refresh_token(data: dict):
+def create_refresh_token(data: dict)-> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
@@ -84,3 +85,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.email == email.lower()).first()
+
+def is_token_blacklisted(db: Session, token: str) -> bool:
+    blacklisted = db.query(BlacklistedToken).filter(BlacklistedToken.token == token).first()
+    return blacklisted is not None

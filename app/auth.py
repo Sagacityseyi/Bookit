@@ -6,6 +6,11 @@ from app.database import get_db
 from app.security import get_user_by_email, get_password_hash
 from app.schemas.user import UserCreate, UserOut, RefreshToken
 from .CRUD.auth import Auth_Service
+from fastapi import Depends, HTTPException, status, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+
+security = HTTPBearer()
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 logger = logging.getLogger(__name__)
@@ -38,6 +43,16 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
     return new_user
 
-@auth_router.post("/refresh", response_model=dict)
+@auth_router.post("/refresh", status_code=status.HTTP_201_CREATED, response_model=dict)
 def refresh(request: RefreshToken, db: Session = Depends(get_db)):
-    return Auth_Service.refresh_token(db, request)
+    return Auth_Service.refresh_token(db, request.refresh_token)
+
+
+
+@auth_router.post("/logout", status_code=status.HTTP_200_OK)
+def logout(
+    authorization: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    token = authorization.credentials
+    return Auth_Service.logout(db, token)
