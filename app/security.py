@@ -45,11 +45,12 @@ def create_access_token(sub: str, roles: List[str] = None) -> str:
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
-def create_refresh_token(sub: str) -> str:
-    return create_token(
-        {"sub": sub, "type": "refresh"},
-        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-    )
+def create_refresh_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[models.User]:
     user = db.query(models.User).filter(models.User.email == email.lower()).first()

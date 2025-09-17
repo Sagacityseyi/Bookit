@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.security import get_user_by_email, get_password_hash
-from app.schemas.user import UserCreate, UserOut
+from app.schemas.user import UserCreate, UserOut, RefreshToken
 from .CRUD.auth import Auth_Service
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -37,3 +37,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     logger.info('User successfully created.')
 
     return new_user
+
+@auth_router.post("/refresh", response_model=dict)
+def refresh(request: RefreshToken, db: Session = Depends(get_db)):
+    return Auth_Service.refresh_token(db, request)

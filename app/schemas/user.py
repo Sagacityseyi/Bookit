@@ -42,8 +42,12 @@ class UserOut(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
-
+    token_type: str = "bearer"
+    refresh_token: str
 
 class TokenData(BaseModel):
     email: str | None = None
+
+
+class RefreshToken(BaseModel):
+    refresh_token: str
