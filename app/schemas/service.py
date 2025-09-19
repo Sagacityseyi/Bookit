@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
-from pydantic import  BaseModel
+from pydantic import BaseModel, Field
 
 
 class ServiceBase(BaseModel):
@@ -27,6 +28,12 @@ class ServiceOut(BaseModel):
     is_active: bool = True
     created_at: datetime
 
+class ServiceUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, min_length=1, max_length=1000)
+    price: Optional[float] = Field(None, gt=0)
+    duration_minutes: Optional[int] = Field(None, gt=0)
+    is_active: Optional[bool] = None
 
     model_config = {
         "from_attributes": True

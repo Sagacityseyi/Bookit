@@ -91,7 +91,6 @@ class AuthService:
                 detail="User not found"
             )
 
-        # Create new tokens
         new_access_token = create_access_token(sub=user.email, roles=[user.role])
         new_refresh_token = create_refresh_token({"sub":user.email})
         return {

@@ -24,7 +24,7 @@ class User(UserBase):
     id: UUID
     role: Role = Role.USER
     created_at: datetime
-    is_active: bool = True
+
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,7 +34,7 @@ class UserOut(BaseModel):
     name: str
     email: EmailStr
     created_at: datetime
-    is_active: bool = True
+
 
     model_config = ConfigDict(from_attributes=True)
 
