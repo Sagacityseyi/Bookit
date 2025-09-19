@@ -37,6 +37,7 @@ class AuthService:
 
     @staticmethod
     def register(db: Session, user_data: UserCreate, password_hash: str):
+
         user = models.User(
             name=user_data.name,
             email=user_data.email.lower(),
@@ -44,9 +45,11 @@ class AuthService:
             role="user"
         )
         db.add(user)
-        db.commit()
+        db.flush()
         db.refresh(user)
         return user
+
+
 
     @staticmethod
     def refresh_token(db: Session, refresh_token: str):

@@ -33,7 +33,6 @@ class UserOut(BaseModel):
     id: UUID
     name: str
     email: EmailStr
-    role: Role
     created_at: datetime
     is_active: bool = True
 
