@@ -26,7 +26,7 @@ class Service(Base):
     __tablename__ = "services"
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False, default=uuid.uuid4)
-    title = Column(String, nullable=False)
+    title = Column(String(50), nullable=False)
     description = Column(Text, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
     duration_minutes = Column(Integer, nullable=False)

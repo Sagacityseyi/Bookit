@@ -1,9 +1,13 @@
+from csv import excel
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
+from app import logger
 from app.CRUD.service import Service_Crud
 from app.database import get_db
+from app.logger import get_logger
 from app.models import Service, User
 from app.schemas.service import ServiceOut, ServiceCreate, ServiceUpdate
 from app.schemas.user import Role
@@ -11,17 +15,27 @@ from app.security import get_current_user
 
 service_router = APIRouter(prefix="/services", tags=["services"])
 
+logger = get_logger(__name__)
 
-@service_router.get("/", response_model=List[ServiceOut])
+@service_router.get("/", response_model=ServiceOut)  # Or create a proper response model
 def get_services(
-        db: Session = Depends(get_db),
-        q: Optional[str] = Query(None, description="Search query for title or description"),
-        price_min: Optional[float] = Query(None, ge=0, description="Minimum price"),
-        price_max: Optional[float] = Query(None, ge=0, description="Maximum price"),
-        active: Optional[bool] = Query(True, description="Filter by active status")
+    db: Session = Depends(get_db),
+    price_min: Optional[float] = Query(None, ge=0, description="Minimum price"),
+    price_max: Optional[float] = Query(None, ge=0, description="Maximum price"),
+    active: Optional[bool] = Query(True, description="Filter by active status"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of records to return")
 ):
+    services, total = Service_Crud.get_services(
+        db, price_min, price_max, active, skip, limit
+    )
 
-    return Service_Crud.get_services(db,q, price_min, price_max, active)
+    return {
+        "data": services,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
 
 
 @service_router.get("/{id}", response_model=ServiceOut)
@@ -32,83 +46,96 @@ def get_service(service_id: UUID,db: Session = Depends(get_db)):
 def create_service(
         service_data: ServiceCreate,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        #current_user: User = Depends(get_current_user)
 ):
+    #if current_user.role != Role.ADMIN:
+       # raise HTTPException(
+            #status_code=status.HTTP_403_FORBIDDEN,
+         #   detail="Only administrators can create services"
+       # )
 
-    if current_user.role != Role.ADMIN:
+    try:
+        new_service = Service_Crud.create_service(db, service_data)
+        logger.info("Service created successfully")
+
+        db.commit()
+        return new_service
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Unable to create service..")
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can create services"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during service creation: {str(e)}"
         )
-
-    existing_service = db.query(Service).filter(Service.title == service_data.title).first()
-    if existing_service:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Service with this title already exists"
-        )
-
-    service = Service(**service_data.model_dump())
-    db.add(service)
-    db.commit()
-    db.refresh(service)
-
-    return service
 
 
 @service_router.patch("/{id}", response_model=ServiceOut)
-def update_service(service_id: UUID, service_data: ServiceUpdate,
-                   db: Session = Depends(get_db),
-                   current_user: User = Depends(get_current_user)):
-
+def update_service(
+        service_id: UUID,
+        service_data: ServiceUpdate,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
     if current_user.role != Role.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can update services"
         )
 
-    service = db.query(Service).filter(Service.id == service_id).first()
-    if not service:
+    try:
+        service = Service_Crud.update_service(db, service_id, service_data)
+        if not service:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Service not found"
+            )
+        db.commit()
+        return service
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Unable to update service: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Service not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during service updating: {str(e)}"
         )
 
-    # Update only provided fields
-    update_data = service_data.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(service, field, value)
 
-    db.commit()
-    db.refresh(service)
-
-    return service
-
-
-# DELETE /services/{id} - Admin only
 @service_router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_service(
         service_id: UUID,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    """
-    Delete a service (admin only).
-    """
     if current_user.role != Role.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can delete services"
         )
 
-    service = db.query(Service).filter(Service.id == service_id).first()
-    if not service:
+    try:
+        del_service = Service_Crud.delete_service(db, service_id)
+        if not del_service:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Service not found"
+            )
+        logger.info("Service deleted successfully")
+        return None
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Unable to delete service: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Service not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during service deletion: {str(e)}"
         )
-
-    db.delete(service)
-    db.commit()
-
-    return None

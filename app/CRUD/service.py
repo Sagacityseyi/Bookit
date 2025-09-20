@@ -1,11 +1,11 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from uuid import UUID
-
 from sqlalchemy.sql.functions import current_user
 
+from app import models
 from app.database import get_db
 from app.models import Service, User
 from app.schemas.service import ServiceOut, ServiceCreate, ServiceUpdate
@@ -18,36 +18,37 @@ logger = logging.getLogger(__name__)
 class Service:
     @staticmethod
     def get_services(
-        db: Session = Depends(get_db),
-        q: Optional[str] = Query(None, description="Search query for title or description"),
-        price_min: Optional[float] = Query(None, ge=0, description="Minimum price"),
-        price_max: Optional[float] = Query(None, ge=0, description="Maximum price"),
-        active: Optional[bool] = Query(True, description="Filter by active status")
-):
-     query = db.query(Service)
+        db: Session,
+        price_min: Optional[float] = None,
+        price_max: Optional[float] = None,
+        active: Optional[bool] = True,
+        skip: int = 0,
+        limit: int = 100
+    ) -> Tuple[List[Service], int]:
+        query = db.query(models.Service)  # Use Service, not models.Service
 
-     if q:
-        query = query.filter(
-            (Service.title.ilike(f"%{q}%")) |
-            (Service.description.ilike(f"%{q}%"))
-        )
-     if price_min is not None:
-        query = query.filter(Service.price >= price_min)
+        if price_min is not None:
+            query = query.filter(models.Service.price >= price_min)
 
-     if price_max is not None:
-        query = query.filter(Service.price <= price_max)
+        if price_max is not None:
+            query = query.filter(models.Service.price <= price_max)
 
-     if active is not None:
-        query = query.filter(Service.is_active == active)
+        if active is not None:
+            query = query.filter(models.Service.is_active == active)
 
-     services = query.order_by(Service.created_at.desc()).all()
-     return services
+        # Get total count for pagination
+        total = query.count()
+
+        # Apply pagination
+        services = query.order_by(models.Service.created_at.desc()).offset(skip).limit(limit).all()
+
+        return services, total
 
     @staticmethod
     def get_service(db: Session, service_id: UUID):
         logging.info(f"Checking if service exists: {service_id}")
         try:
-            service = db.query(Service).filter(Service.id == service_id).first()
+            service = db.query(models.Service).filter(models.Service.id == service_id).first()
 
             if not service:
                 logging.warning(f"Service not found: {service_id}")
@@ -76,24 +77,42 @@ class Service:
 
     @staticmethod
     def create_service(db: Session, service_data: ServiceCreate):
-        logging.info()
-        if current_user.role != Role.ADMIN:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Only administrators can create services"
-                )
-
-            existing_service = db.query(Service).filter(Service.title == service_data.title).first()
-            if existing_service:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Service with this title already exists"
-                )
-
-            service = Service(**service_data.model_dump())
-            db.add(service)
-            db.commit()
-            db.refresh(service)
+        service = models.Service(
+            title=service_data.title,
+            description=service_data.description,
+            price = service_data.price,
+            duration_minutes = service_data.duration_minutes
+            )
 
 
+        db.add(service)
+        db.flush()
+        db.refresh(service)
+        return service
+
+    @staticmethod
+    def update_service(db: Session, service_id: UUID, service_data: ServiceUpdate):
+        service = db.query(Service).filter(Service.id == service_id).first()
+        if not service:
+            return None
+
+        update_data = service_data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(service, field, value)
+
+        db.flush()
+        db.refresh(service)
+        return service
+
+        return service
+
+    @staticmethod
+    def delete_service(db: Session, service_id: UUID):
+        service = db.query(Service).filter(Service.id == service_id).first()
+        if not service:
+            return False
+
+        db.delete(service)
+        db.commit()
+        return True
 Service_Crud = Service()
