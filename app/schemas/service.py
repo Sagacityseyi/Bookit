@@ -28,6 +28,9 @@ class ServiceOut(BaseModel):
     is_active: bool = True
     created_at: datetime
 
+    class Config:
+        from_attributes = True
+
 class ServiceUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = Field(None, min_length=1, max_length=1000)

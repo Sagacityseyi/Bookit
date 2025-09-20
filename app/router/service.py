@@ -1,14 +1,13 @@
-from csv import excel
-
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 from app import logger
 from app.CRUD.service import Service_Crud
 from app.database import get_db
 from app.logger import get_logger
-from app.models import Service, User
+from app.models import User
+from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceOut, ServiceCreate, ServiceUpdate
 from app.schemas.user import Role
 from app.security import get_current_user
@@ -17,25 +16,39 @@ service_router = APIRouter(prefix="/services", tags=["services"])
 
 logger = get_logger(__name__)
 
-@service_router.get("/", response_model=ServiceOut)  # Or create a proper response model
-def get_services(
-    db: Session = Depends(get_db),
-    price_min: Optional[float] = Query(None, ge=0, description="Minimum price"),
-    price_max: Optional[float] = Query(None, ge=0, description="Maximum price"),
-    active: Optional[bool] = Query(True, description="Filter by active status"),
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return")
-):
-    services, total = Service_Crud.get_services(
-        db, price_min, price_max, active, skip, limit
-    )
 
-    return {
-        "data": services,
-        "total": total,
-        "skip": skip,
-        "limit": limit
-    }
+@service_router.get("/", response_model=PaginatedResponse[ServiceOut])
+def get_services(
+        db: Session = Depends(get_db),
+        price_min: Optional[float] = Query(None, ge=0, description="Minimum price"),
+        price_max: Optional[float] = Query(None, ge=0, description="Maximum price"),
+        active: Optional[bool] = Query(True, description="Filter by active status"),
+        skip: int = Query(0, ge=0, description="Number of records to skip"),
+        limit: int = Query(100, ge=1, le=1000, description="Number of records to return")
+):
+    try:
+        services, total = Service_Crud.get_services(
+            db, price_min, price_max, active, skip, limit
+        )
+
+        service_models = [ServiceOut.model_validate(service) for service in services]
+
+        has_more = (skip + limit) < total
+
+        return PaginatedResponse[ServiceOut](
+            data=service_models,
+            total=total,
+            skip=skip,
+            limit=limit,
+            has_more=has_more
+        )
+
+    except Exception as e:
+        logger.error(f"Error fetching services: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error fetching services"
+        )
 
 
 @service_router.get("/{id}", response_model=ServiceOut)
@@ -46,13 +59,13 @@ def get_service(service_id: UUID,db: Session = Depends(get_db)):
 def create_service(
         service_data: ServiceCreate,
         db: Session = Depends(get_db),
-        #current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user)
 ):
-    #if current_user.role != Role.ADMIN:
-       # raise HTTPException(
-            #status_code=status.HTTP_403_FORBIDDEN,
-         #   detail="Only administrators can create services"
-       # )
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can create services"
+        )
 
     try:
         new_service = Service_Crud.create_service(db, service_data)

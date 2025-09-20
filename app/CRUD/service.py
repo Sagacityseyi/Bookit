@@ -1,16 +1,16 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.sql.functions import current_user
-
 from app import models
 from app.database import get_db
 from app.models import Service, User
 from app.schemas.service import ServiceOut, ServiceCreate, ServiceUpdate
 from app.schemas.user import Role
 from app.security import get_current_user
+
 
 
 logger = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ class Service:
         active: Optional[bool] = True,
         skip: int = 0,
         limit: int = 100
-    ) -> Tuple[List[Service], int]:
-        query = db.query(models.Service)  # Use Service, not models.Service
+    ):
+        query = db.query(models.Service)
 
         if price_min is not None:
             query = query.filter(models.Service.price >= price_min)
@@ -36,10 +36,9 @@ class Service:
         if active is not None:
             query = query.filter(models.Service.is_active == active)
 
-        # Get total count for pagination
         total = query.count()
 
-        # Apply pagination
+
         services = query.order_by(models.Service.created_at.desc()).offset(skip).limit(limit).all()
 
         return services, total
@@ -92,7 +91,7 @@ class Service:
 
     @staticmethod
     def update_service(db: Session, service_id: UUID, service_data: ServiceUpdate):
-        service = db.query(Service).filter(Service.id == service_id).first()
+        service = db.query(models.Service).filter(models.Service.id == service_id).first()
         if not service:
             return None
 
@@ -108,11 +107,13 @@ class Service:
 
     @staticmethod
     def delete_service(db: Session, service_id: UUID):
-        service = db.query(Service).filter(Service.id == service_id).first()
+        service = db.query(models.Service).filter(models.Service.id == service_id).first()
         if not service:
             return False
 
         db.delete(service)
         db.commit()
         return True
+
+
 Service_Crud = Service()
