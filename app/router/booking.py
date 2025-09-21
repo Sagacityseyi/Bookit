@@ -4,11 +4,11 @@ from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
 
-from app.db.database import get_db
-from app.models.user import User, Role
 from app.CRUD.booking import Booking_Crud
-from app.schemas.booking import BookingCreate, BookingUpdate, BookingOut, BookingStatus, BookingFilter
-from app.services.auth import get_current_user
+from app.database import get_db
+from app.models import User
+from app.schemas.booking import BookingOut, BookingCreate, BookingStatus, BookingUpdate
+from app.security import get_current_user
 
 booking_router = APIRouter(prefix="/bookings", tags=["bookings"])
 
@@ -44,8 +44,6 @@ def get_bookings(
             db, current_user, status, from_date, to_date, skip, limit
         )
 
-        # Convert to Pydantic models
-        from app.schemas.booking import BookingOut
         booking_models = [BookingOut.model_validate(booking) for booking in bookings]
 
         return {

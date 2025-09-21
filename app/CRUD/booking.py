@@ -1,44 +1,60 @@
-from sqlalchemy.orm import Session
+from datetime import datetime, timezone, timedelta
+from typing import Optional, Tuple, List
 from uuid import UUID
-from datetime import datetime
-from typing import List, Optional, Tuple
-from app.models.booking import Booking, BookingStatus
-from app.models.service import Service
-from app.models.user import User, Role
+
+from sqlalchemy.orm import Session
+
+from app import models
+from app.models import Booking, User
+from app.schemas.booking import BookingStatus
+from app.schemas.user import Role
 
 
 class Booking_Crud:
 
     @staticmethod
+    def ensure_timezone_aware(dt: datetime) -> datetime:
+        """Ensure datetime is timezone-aware (UTC if naive)"""
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    @staticmethod
     def create_booking(db: Session, booking_data, user_id: UUID) -> Booking:
-        # Check for overlapping bookings
+        now = datetime.now(timezone.utc)
+
+        # Ensure timezone awareness
+        start_time = Booking_Crud.ensure_timezone_aware(booking_data.start_time)
+
+        # Validate start time is in future (redundant but safe)
+        if start_time <= now:
+            raise ValueError("Start time must be in the future")
+
+        # Check for overlapping bookings (CORRECTED overlap logic)
         overlapping = db.query(Booking).filter(
             Booking.service_id == booking_data.service_id,
             Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
-            Booking.start_time < booking_data.start_time,
-            Booking.end_time > booking_data.start_time
+            # Correct overlap detection: new booking starts during existing booking
+            (Booking.start_time <= start_time) & (Booking.end_time > start_time)
         ).first()
 
         if overlapping:
             raise ValueError("Time slot is already booked")
 
         # Get service to calculate end_time and total_price
-        service = db.query(Service).filter(Service.id == booking_data.service_id).first()
+        service = db.query(models.Service).filter(models.Service.id == booking_data.service_id).first()  # Fixed import
         if not service:
             raise ValueError("Service not found")
 
         # Calculate end_time and total_price
-        from datetime import timedelta
-        end_time = booking_data.start_time + timedelta(minutes=service.duration_minutes)
+        end_time = start_time + timedelta(minutes=service.duration_minutes)
         total_price = service.price
 
         booking = Booking(
             user_id=user_id,
             service_id=booking_data.service_id,
-            start_time=booking_data.start_time,
+            start_time=start_time,
             end_time=end_time,
-            total_price=total_price,
-            notes=booking_data.notes,
             status=BookingStatus.PENDING
         )
 
@@ -93,66 +109,73 @@ class Booking_Crud:
         if not booking:
             return None
 
-        # Permission check
         if user.role != Role.ADMIN and booking.user_id != user.id:
             raise PermissionError("Not authorized to update this booking")
 
-        # Status transition rules
-        if update_data.status:
-            if user.role != Role.ADMIN:
-                # Users can only cancel their own bookings
-                if update_data.status != BookingStatus.CANCELLED:
-                    raise ValueError("Users can only cancel bookings")
+        now = datetime.now(timezone.utc)
+        booking_start = Booking_Crud.ensure_timezone_aware(booking.start_time)
+        is_rescheduling = update_data.start_time is not None
 
-                # Can only cancel before start time
-                if booking.start_time <= datetime.now():
-                    raise ValueError("Cannot cancel booking after it has started")
+        if update_data.status is not None:
+            if user.role != Role.ADMIN:
+                allowed_statuses = [BookingStatus.CANCELLED]
+                if is_rescheduling:
+                    allowed_statuses.append(BookingStatus.PENDING)
+
+                if update_data.status not in allowed_statuses:
+                    raise ValueError("Users can only cancel bookings or set to pending when rescheduling")
+
+                if booking_start <= now and update_data.status != BookingStatus.CANCELLED:
+                    raise ValueError("Cannot change status after booking has started")
 
             booking.status = update_data.status
 
-        # Rescheduling rules
-        if update_data.start_time:
-            if user.role != Role.ADMIN and booking.status not in [BookingStatus.PENDING, BookingStatus.CONFIRMED]:
-                raise ValueError("Can only reschedule pending or confirmed bookings")
 
-            # Check for new time conflicts
+        if update_data.start_time is not None:
+            new_start_time = Booking_Crud.ensure_timezone_aware(update_data.start_time)
+
+            if user.role != Role.ADMIN:
+                if booking.status not in [BookingStatus.PENDING, BookingStatus.CONFIRMED]:
+                    raise ValueError("Can only reschedule pending or confirmed bookings")
+                if booking_start <= now:
+                    raise ValueError("Cannot reschedule booking after it has started")
+
+            if new_start_time <= now:
+                raise ValueError("New start time must be in the future")
+
+            if new_start_time.hour < 8 or new_start_time.hour >= 20:
+                raise ValueError("Bookings only available between 8 AM and 8 PM")
+            if new_start_time.weekday() >= 5:
+                raise ValueError("Weekend bookings not available")
+
             overlapping = db.query(Booking).filter(
                 Booking.service_id == booking.service_id,
                 Booking.id != booking_id,
                 Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
-                Booking.start_time < update_data.start_time,
-                Booking.end_time > update_data.start_time
+                (Booking.start_time <= new_start_time) & (Booking.end_time > new_start_time)
             ).first()
 
             if overlapping:
                 raise ValueError("New time slot is already booked")
 
-            # Recalculate end_time and update
-            service = db.query(Service).filter(Service.id == booking.service_id).first()
-            from datetime import timedelta
-            booking.start_time = update_data.start_time
-            booking.end_time = update_data.start_time + timedelta(minutes=service.duration_minutes)
+            service = db.query(models.Service).filter(models.Service.id == booking.service_id).first()
+            booking.start_time = new_start_time
+            booking.end_time = new_start_time + timedelta(minutes=service.duration_minutes)
 
-        if update_data.notes:
-            booking.notes = update_data.notes
-
-        booking.updated_at = datetime.now()
+        booking.updated_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(booking)
         return booking
-
     @staticmethod
     def delete_booking(db: Session, booking_id: UUID, user: User) -> bool:
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return False
 
-        # Permission and timing rules
+
         if user.role == Role.ADMIN:
-            # Admin can delete anytime
             pass
         elif booking.user_id == user.id:
-            # User can only delete before start time
             if booking.start_time <= datetime.now():
                 raise ValueError("Cannot delete booking after it has started")
         else:
