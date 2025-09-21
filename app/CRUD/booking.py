@@ -1,9 +1,7 @@
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Tuple, List
+from typing import Optional, List
 from uuid import UUID
-
 from sqlalchemy.orm import Session
-
 from app import models
 from app.models import Booking, User
 from app.schemas.booking import BookingStatus
@@ -14,7 +12,6 @@ class Booking_Crud:
 
     @staticmethod
     def ensure_timezone_aware(dt: datetime) -> datetime:
-        """Ensure datetime is timezone-aware (UTC if naive)"""
         if dt.tzinfo is None:
             return dt.replace(tzinfo=timezone.utc)
         return dt
@@ -23,38 +20,30 @@ class Booking_Crud:
     def create_booking(db: Session, booking_data, user_id: UUID) -> Booking:
         now = datetime.now(timezone.utc)
 
-        # Ensure timezone awareness
         start_time = Booking_Crud.ensure_timezone_aware(booking_data.start_time)
 
-        # Validate start time is in future (redundant but safe)
         if start_time <= now:
             raise ValueError("Start time must be in the future")
 
-        # Check for overlapping bookings (CORRECTED overlap logic)
         overlapping = db.query(Booking).filter(
             Booking.service_id == booking_data.service_id,
             Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
-            # Correct overlap detection: new booking starts during existing booking
             (Booking.start_time <= start_time) & (Booking.end_time > start_time)
         ).first()
 
         if overlapping:
             raise ValueError("Time slot is already booked")
 
-        # Get service to calculate end_time and total_price
-        service = db.query(models.Service).filter(models.Service.id == booking_data.service_id).first()  # Fixed import
+        service = db.query(models.Service).filter(models.Service.id == booking_data.service_id).first()
         if not service:
             raise ValueError("Service not found")
 
-        # Calculate end_time and total_price
-        end_time = start_time + timedelta(minutes=service.duration_minutes)
-        total_price = service.price
 
         booking = Booking(
             user_id=user_id,
             service_id=booking_data.service_id,
             start_time=start_time,
-            end_time=end_time,
+            end_time=booking_data.end_time,
             status=BookingStatus.PENDING
         )
 
@@ -72,7 +61,7 @@ class Booking_Crud:
             to_date: Optional[datetime] = None,
             skip: int = 0,
             limit: int = 100
-    ) -> Tuple[List[Booking], int]:
+    ):
 
         query = db.query(Booking)
 
@@ -98,7 +87,6 @@ class Booking_Crud:
     def get_booking(db: Session, booking_id: UUID, user: User) -> Optional[Booking]:
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
 
-        # Check if user has permission to view this booking
         if booking and (user.role == Role.ADMIN or booking.user_id == user.id):
             return booking
         return None
@@ -166,6 +154,8 @@ class Booking_Crud:
         db.commit()
         db.refresh(booking)
         return booking
+
+
     @staticmethod
     def delete_booking(db: Session, booking_id: UUID, user: User) -> bool:
         booking = db.query(Booking).filter(Booking.id == booking_id).first()

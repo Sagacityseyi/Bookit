@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-
 from app.CRUD.booking import Booking_Crud
 from app.database import get_db
 from app.models import User
@@ -35,7 +34,7 @@ def get_bookings(
         from_date: Optional[datetime] = Query(None, description="Filter from date"),
         to_date: Optional[datetime] = Query(None, description="Filter to date"),
         skip: int = Query(0, ge=0),
-        limit: int = Query(100, ge=1, le=1000),
+        limit: int = Query(100, ge=1, le=100),
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
