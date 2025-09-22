@@ -55,6 +55,7 @@ def get_bookings(
         }
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    logger.error(f"Error fetching bookings: {str(e)}")
 
 
 @booking_router.get("/{booking_id}", response_model=BookingOut)

@@ -68,6 +68,7 @@ class Booking_Crud:
             skip: int = 0,
             limit: int = 100
     ):
+        logger.info(f"Fetching bookings for user {user.id} ")
 
         query = db.query(Booking)
 
@@ -83,6 +84,8 @@ class Booking_Crud:
 
         if to_date:
             query = query.filter(Booking.start_time <= to_date)
+            
+            logger.info(f"Filtering bookings up to {to_date.isoformat()}")
 
         total = query.count()
         bookings = query.order_by(Booking.start_time.desc()).offset(skip).limit(limit).all()
@@ -99,16 +102,20 @@ class Booking_Crud:
 
     @staticmethod
     def update_booking(db: Session, booking_id: UUID, update_data, user: User) -> Optional[Booking]:
+        logger.info(f"Updating booking {booking_id} for user {user.id}")
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return None
 
         if user.role != Role.ADMIN and booking.user_id != user.id:
             raise PermissionError("Not authorized to update this booking")
+        
 
         now = datetime.now(timezone.utc)
         booking_start = Booking_Crud.ensure_timezone_aware(booking.start_time)
         is_rescheduling = update_data.start_time is not None
+        
+        
 
         if update_data.status is not None:
             if user.role != Role.ADMIN:
@@ -165,6 +172,7 @@ class Booking_Crud:
     @staticmethod
     def delete_booking(db: Session, booking_id: UUID, user: User) -> bool:
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        logger.info(f"Deleting booking {booking_id} for user {user.id}")
         if not booking:
             return False
 
@@ -176,6 +184,7 @@ class Booking_Crud:
                 raise ValueError("Cannot delete booking after it has started")
         else:
             raise PermissionError("Not authorized to delete this booking")
+        logger.info(f"Booking {booking_id} deleted by user {user.id}")
 
         db.delete(booking)
         db.commit()
