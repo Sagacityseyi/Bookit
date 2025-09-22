@@ -26,6 +26,7 @@ def create_booking(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
+        logging.error(f"Error creating booking: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -80,6 +81,7 @@ def update_booking(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
+    logger.info(f"Updating booking with ID: {booking_id}")
     try:
         updated_booking = Booking_Crud.update_booking(db, booking_id, update_data, current_user)
         if not updated_booking:
@@ -89,6 +91,7 @@ def update_booking(
     except (ValueError, PermissionError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
+        logger.error(f"Error updating booking: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -106,5 +109,8 @@ def delete_booking(
     except (ValueError, PermissionError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
+        logger.error(f"Error deleting booking: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    logger.info(f"Booking with ID: {booking_id} deleted successfully")
+    return None
