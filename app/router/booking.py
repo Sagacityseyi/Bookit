@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -11,6 +12,7 @@ from app.security import get_current_user
 
 booking_router = APIRouter(prefix="/bookings", tags=["bookings"])
 
+logger = logging.getLogger(__name__)
 
 @booking_router.post("/", response_model=BookingOut, status_code=status.HTTP_201_CREATED)
 def create_booking(
@@ -61,9 +63,11 @@ def get_booking(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
+    logger.info(f"Fetching booking with ID: {booking_id}")
     booking = Booking_Crud.get_booking(db, booking_id, current_user)
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    
 
     return BookingOut.model_validate(booking)
 

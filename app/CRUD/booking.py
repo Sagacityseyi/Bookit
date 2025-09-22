@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import logging
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -7,6 +8,7 @@ from app.models import Booking, User
 from app.schemas.booking import BookingStatus
 from app.schemas.user import Role
 
+logger = logging.getLogger(__name__)
 
 class Booking_Crud:
 
@@ -19,6 +21,7 @@ class Booking_Crud:
     @staticmethod
     def create_booking(db: Session, booking_data, user_id: UUID) -> Booking:
         now = datetime.now(timezone.utc)
+        logger.info(f"Creating booking for user {user_id} at {now.isoformat()}")
 
         start_time = Booking_Crud.ensure_timezone_aware(booking_data.start_time)
 
@@ -33,6 +36,8 @@ class Booking_Crud:
 
         if overlapping:
             raise ValueError("Time slot is already booked")
+        
+        logger.info("No overlapping bookings found")
 
         service = db.query(models.Service).filter(models.Service.id == booking_data.service_id).first()
         if not service:
@@ -46,6 +51,7 @@ class Booking_Crud:
             end_time=booking_data.end_time,
             status=BookingStatus.PENDING
         )
+        logger.info(f"Booking created: {booking}")
 
         db.add(booking)
         db.commit()
