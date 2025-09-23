@@ -170,20 +170,22 @@ class Booking_Crud:
 
     @staticmethod
     def complete_booking(db: Session, booking_id: UUID, admin_user: User) -> Optional[Booking]:
-        """Special method for admins to mark bookings as completed"""
+        logger.info(f"Admin {admin_user.id} completing booking {booking_id}")
         if admin_user.role != Role.ADMIN:
             raise PermissionError("Only admins can complete bookings")
 
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
+            logger.warning(f"Booking {booking_id} not found")
             return None
 
-        # Use CONFIRMED as a temporary workaround
+    
         booking.status = BookingStatus.COMPLETED
         booking.updated_at = datetime.now(timezone.utc)
 
         db.commit()
         db.refresh(booking)
+        logger.info(f"Booking {booking_id} marked as completed")
         return booking
 
     @staticmethod

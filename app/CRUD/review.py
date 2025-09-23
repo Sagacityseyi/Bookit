@@ -64,11 +64,12 @@ class Review_Crud:
         try:
             logger.info(f"Fetching reviews for service {service_id}")
 
-            reviews = db.query(Review).filter(
-                Review.service_id == service_id
+            reviews = db.query(models.Review).filter(
+                models.Review.service_id == service_id
             ).order_by(Review.created_at.desc()).offset(skip).limit(limit).all()
 
             logger.info(f"Found {len(reviews)} reviews for service {service_id}")
+
             return reviews
 
         except Exception as e:

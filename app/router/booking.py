@@ -97,13 +97,12 @@ def update_booking(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@booking_router.post("/{booking_id}/complete", response_model=BookingOut)
+@booking_router.post("/{id}/complete", response_model=BookingOut)
 def complete_booking(
         booking_id: UUID,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    """Admin endpoint to mark booking as completed (workaround)"""
     if current_user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Admin access required")
 

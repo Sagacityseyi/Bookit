@@ -134,9 +134,6 @@ def delete_review(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    """
-    Delete a review. Can be deleted by the review owner or an admin.
-    """
     try:
         logger.info(f"Received delete request for review {review_id} from user {current_user.id}")
 
