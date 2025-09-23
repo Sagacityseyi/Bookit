@@ -14,7 +14,8 @@ class BookingStatus(str, Enum):
 
 class BookingBase(BaseModel):
     service_id: UUID
-    start_time: datetime  # Added notes field
+    start_time: datetime
+    end_time: datetime
 
 
 class BookingCreate(BookingBase):

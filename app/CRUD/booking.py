@@ -168,24 +168,40 @@ class Booking_Crud:
         db.refresh(booking)
         return booking
 
-
     @staticmethod
     def delete_booking(db: Session, booking_id: UUID, user: User) -> bool:
-        booking = db.query(Booking).filter(Booking.id == booking_id).first()
-        logger.info(f"Deleting booking {booking_id} for user {user.id}")
-        if not booking:
-            return False
+        try:
+            logger.info(f"Deleting booking {booking_id} for user {user.id}")
 
+            booking = db.query(Booking).filter(Booking.id == booking_id).first()
+            if not booking:
+                logger.warning(f"Booking {booking_id} not found")
+                return False
 
-        if user.role == Role.ADMIN:
-            pass
-        elif booking.user_id == user.id:
-            if booking.start_time <= datetime.now():
-                raise ValueError("Cannot delete booking after it has started")
-        else:
-            raise PermissionError("Not authorized to delete this booking")
-        logger.info(f"Booking {booking_id} deleted by user {user.id}")
+            now = datetime.now(timezone.utc)
+            logger.info(f"Current time: {now}, Booking start time: {booking.start_time}")
 
-        db.delete(booking)
-        db.commit()
-        return True
+            booking_start = Booking_Crud.ensure_timezone_aware(booking.start_time)
+            logger.info(f"Timezone-aware booking start: {booking_start}")
+
+            if user.role == Role.ADMIN:
+                logger.info("Admin deletion - no time restrictions")
+            elif booking.user_id == user.id:
+                # User can only delete before start time
+                if booking_start <= now:
+                    logger.warning(f"Cannot delete - booking started at {booking_start}, current time {now}")
+                    raise ValueError("Cannot delete booking after it has started")
+                logger.info("User deletion allowed - booking hasn't started yet")
+            else:
+                logger.warning(f"User {user.id} not authorized to delete booking {booking_id}")
+                raise PermissionError("Not authorized to delete this booking")
+
+            db.delete(booking)
+            db.commit()
+            logger.info(f"Booking {booking_id} deleted successfully")
+            return True
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error deleting booking: {str(e)}")
+            raise
