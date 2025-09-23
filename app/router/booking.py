@@ -8,6 +8,7 @@ from app.CRUD.booking import Booking_Crud
 from app.database import get_db
 from app.models import User
 from app.schemas.booking import BookingOut, BookingCreate, BookingStatus, BookingUpdate
+from app.schemas.user import Role
 from app.security import get_current_user
 
 booking_router = APIRouter(prefix="/bookings", tags=["bookings"])
@@ -94,6 +95,26 @@ def update_booking(
         logger.error(f"Error updating booking: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@booking_router.post("/{booking_id}/complete", response_model=BookingOut)
+def complete_booking(
+        booking_id: UUID,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    """Admin endpoint to mark booking as completed (workaround)"""
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    try:
+        completed_booking = Booking_Crud.complete_booking(db, booking_id, current_user)
+        if not completed_booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        return completed_booking
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @booking_router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)

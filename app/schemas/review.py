@@ -1,6 +1,7 @@
+from dataclasses import field
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ReviewBase(BaseModel):
@@ -10,6 +11,12 @@ class ReviewBase(BaseModel):
 
 class ReviewCreate(ReviewBase):
     booking_id: UUID = Field(..., description="ID of the booking being reviewed")
+
+    @field_validator('rating')
+    def validate_rating(cls, v):
+        if v < 1 or v > 5:
+            raise ValueError("Rating must be between 1 and 5")
+        return v
 
 
 class ReviewUpdate(BaseModel):

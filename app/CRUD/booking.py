@@ -103,7 +103,7 @@ class Booking_Crud:
     @staticmethod
     def update_booking(db: Session, booking_id: UUID, update_data, user: User) -> Optional[Booking]:
         logger.info(f"Updating booking {booking_id} for user {user.id}")
-        booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
         if not booking:
             return None
 
@@ -164,6 +164,24 @@ class Booking_Crud:
             booking.end_time = new_start_time + timedelta(minutes=service.duration_minutes)
 
         booking.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(booking)
+        return booking
+
+    @staticmethod
+    def complete_booking(db: Session, booking_id: UUID, admin_user: User) -> Optional[Booking]:
+        """Special method for admins to mark bookings as completed"""
+        if admin_user.role != Role.ADMIN:
+            raise PermissionError("Only admins can complete bookings")
+
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            return None
+
+        # Use CONFIRMED as a temporary workaround
+        booking.status = BookingStatus.COMPLETED
+        booking.updated_at = datetime.now(timezone.utc)
+
         db.commit()
         db.refresh(booking)
         return booking
