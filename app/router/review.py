@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List, Optional
 import logging
-
 from app.CRUD.review import Review_Crud
 from app.database import get_db
 from app.models import User

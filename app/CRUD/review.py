@@ -3,7 +3,6 @@ from uuid import UUID
 from datetime import datetime, timezone
 from typing import List, Optional
 import logging
-
 from app import models
 from app.models import Review, User
 from app.schemas.booking import BookingStatus

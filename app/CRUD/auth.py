@@ -1,5 +1,4 @@
 import logging
-
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,8 +6,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.models import User, BlacklistedToken
 from app.schemas.user import UserCreate, RefreshToken
-from app.security import authenticate_user, create_token, SECRET_KEY, ALGORITHM, create_access_token, \
-    create_refresh_token
+from app.security import authenticate_user, create_token, SECRET_KEY, ALGORITHM, create_access_token, create_refresh_token
 
 logger = logging.getLogger(__name__)
 

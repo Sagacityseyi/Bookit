@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from app import logger
 from app.CRUD.service import Service_Crud
 from app.database import get_db
 from app.logger import get_logger
 from app.models import User
-from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceOut, ServiceCreate, ServiceUpdate
 from app.schemas.user import Role
 from app.security import get_current_user
@@ -17,7 +16,7 @@ service_router = APIRouter(prefix="/services", tags=["services"])
 logger = get_logger(__name__)
 
 
-@service_router.get("/", response_model=PaginatedResponse[ServiceOut])
+@service_router.get("/",)
 def get_services(
         db: Session = Depends(get_db),
         price_min: Optional[float] = Query(None, ge=0, description="Minimum price"),
@@ -35,13 +34,7 @@ def get_services(
 
         has_more = (skip + limit) < total
 
-        return PaginatedResponse[ServiceOut](
-            data=service_models,
-            total=total,
-            skip=skip,
-            limit=limit,
-            has_more=has_more
-        )
+        return service_models
 
     except Exception as e:
         logger.error(f"Error fetching services: {str(e)}")
