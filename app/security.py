@@ -3,6 +3,7 @@ from datetime import timedelta, datetime, timezone
 from typing import Optional, List
 import jwt
 from fastapi import HTTPException, Depends, status
+from jwt import PyJWTError
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
@@ -75,7 +76,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except jwt.JWTError:
+    except PyJWTError:
         raise credentials_exception
 
     user = db.query(models.User).filter(models.User.email == email).first()

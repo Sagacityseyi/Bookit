@@ -7,6 +7,7 @@ import logging
 from app import models
 from app.models import Review, User
 from app.schemas.booking import BookingStatus
+from app.schemas.review import ReviewUpdate
 from app.schemas.user import Role
 
 logger = logging.getLogger(__name__)
@@ -29,20 +30,20 @@ class Review_Crud:
                 logger.warning(f"Booking {review_data.booking_id} not found or doesn't belong to user {user_id}")
                 raise ValueError("Booking not found or access denied")
 
-            # Check if booking is completed
             if booking.status != BookingStatus.COMPLETED:
                 logger.warning(f"Booking {review_data.booking_id} is not completed (status: {booking.status})")
                 raise ValueError("Can only review completed bookings")
 
             # Check if review already exists for this booking
-            existing_review = db.query(models.Review).filter(models.Review.booking_id == review_data.booking_id).first()
+            existing_review = db.query(Review).filter(Review.booking_id == review_data.booking_id).first()
             if existing_review:
                 logger.warning(f"Review already exists for booking {review_data.booking_id}")
                 raise ValueError("Only one review allowed per booking")
 
-            # Create the review
             review = Review(
                 booking_id=review_data.booking_id,
+                user_id=user_id,
+                service_id=booking.service_id,
                 rating=review_data.rating,
                 comment=review_data.comment
             )
@@ -60,20 +61,16 @@ class Review_Crud:
             raise
 
     @staticmethod
-    def get_reviews_by_service(db: Session, service_id: UUID, skip: int = 0, limit: int = 100) -> List[Review]:
+    def get_all_reviews(db: Session, skip: int = 0, limit: int = 100) -> List[Review]:
         try:
-            logger.info(f"Fetching reviews for service {service_id}")
+            logger.info(f"Fetching all reviews" )
 
-            reviews = db.query(models.Review).filter(
-                models.Review.service_id == service_id
-            ).order_by(Review.created_at.desc()).offset(skip).limit(limit).all()
-
-            logger.info(f"Found {len(reviews)} reviews for service {service_id}")
+            reviews = db.query(models.Review)
 
             return reviews
 
         except Exception as e:
-            logger.error(f"Error fetching reviews for service {service_id}: {str(e)}")
+            logger.error(f"Error fetching all reviews: {str(e)}")
             raise
 
     @staticmethod
@@ -86,11 +83,11 @@ class Review_Crud:
             raise
 
     @staticmethod
-    def update_review(db: Session, review_id: UUID, update_data, user: User) -> Optional[Review]:
+    def update_review(db: Session, review_id: UUID, update_data: ReviewUpdate, user: User) -> Optional[Review]:
         try:
             logger.info(f"Attempting to update review {review_id} by user {user.id}")
 
-            review = db.query(Review).filter(Review.id == review_id).first()
+            review = db.query(models.Review).filter(models.Review.id == review_id).first()
             if not review:
                 logger.warning(f"Review {review_id} not found")
                 return None
@@ -142,32 +139,4 @@ class Review_Crud:
         except Exception as e:
             db.rollback()
             logger.error(f"Error deleting review {review_id}: {str(e)}")
-            raise
-
-    @staticmethod
-    def get_service_rating_stats(db: Session, service_id: UUID) -> dict:
-        try:
-            logger.info(f"Calculating rating stats for service {service_id}")
-
-            from sqlalchemy import func
-
-            stats = db.query(
-                func.count(Review.id).label('total_reviews'),
-                func.avg(Review.rating).label('average_rating'),
-                func.min(Review.rating).label('min_rating'),
-                func.max(Review.rating).label('max_rating')
-            ).filter(Review.service_id == service_id).first()
-
-            result = {
-                'total_reviews': stats.total_reviews or 0,
-                'average_rating': float(stats.average_rating or 0),
-                'min_rating': stats.min_rating or 0,
-                'max_rating': stats.max_rating or 0
-            }
-
-            logger.info(f"Rating stats for service {service_id}: {result}")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error calculating rating stats for service {service_id}: {str(e)}")
             raise

@@ -20,7 +20,6 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
-    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
 
 
 class Service(Base):
@@ -35,7 +34,7 @@ class Service(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     bookings = relationship("Booking", back_populates="service", cascade="all, delete-orphan")
-    reviews = relationship("Review", back_populates="service", cascade="all, delete-orphan")
+
 
 
 class Booking(Base):
@@ -59,14 +58,15 @@ class Review(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, nullable=False, default=uuid.uuid4)
     booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False)
-    service_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    service_id = Column(UUID(as_uuid=True), ForeignKey("services.id"), nullable=False)
     rating = Column(Integer, nullable=False)
     comment = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     booking = relationship("Booking", back_populates="review")
-    user = relationship("User", back_populates="reviews")
-    service = relationship("Service", back_populates="reviews")
+    user = relationship("User", backref="reviews")
+    service = relationship("Service", backref="reviews")
 
 
 class BlacklistedToken(Base):

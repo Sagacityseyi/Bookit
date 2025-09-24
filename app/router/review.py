@@ -21,10 +21,6 @@ def create_review(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    """
-    Create a review for a completed booking.
-    Users can only review their own completed bookings, one review per booking.
-    """
     try:
         logger.info(
             f"Received review creation request from user {current_user.id} for booking {review_data.booking_id}")
@@ -48,44 +44,18 @@ def create_review(
 
 @review_router.get("/services/{service_id}/reviews", response_model=List[ReviewOut])
 def get_service_reviews(
-        service_id: UUID,
         skip: int = Query(0, ge=0, description="Number of records to skip"),
         limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
         db: Session = Depends(get_db)
 ):
-    """
-    Get all reviews for a specific service.
-    """
     try:
-        logger.info(f"Fetching reviews for service {service_id}")
+        logger.info(f"Fetching all reviews")
 
-        reviews = Review_Crud.get_reviews_by_service(db, service_id, skip, limit)
+        reviews = Review_Crud.get_all_reviews(db, skip, limit)
         return reviews
 
     except Exception as e:
-        logger.error(f"Error fetching reviews for service {service_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
-
-
-@review_router.get("/services/{service_id}/stats")
-def get_service_review_stats(
-        service_id: UUID,
-        db: Session = Depends(get_db)
-):
-    """
-    Get rating statistics for a service.
-    """
-    try:
-        logger.info(f"Fetching rating stats for service {service_id}")
-
-        stats = Review_Crud.get_service_rating_stats(db, service_id)
-        return stats
-
-    except Exception as e:
-        logger.error(f"Error fetching stats for service {service_id}: {str(e)}")
+        logger.error(f"Error fetching all reviews id {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -99,9 +69,6 @@ def update_review(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    """
-    Update a review. Only the review owner can update their review.
-    """
     try:
         logger.info(f"Received update request for review {review_id} from user {current_user.id}")
 
