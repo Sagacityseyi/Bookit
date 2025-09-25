@@ -91,6 +91,7 @@ class AuthService:
 
         new_access_token = create_access_token(sub=user.email, roles=[user.role])
         new_refresh_token = create_refresh_token({"sub":user.email})
+        logger.info(f"Tokens refreshed for {user.email}")
         return {
             "access_token": new_access_token,
             "refresh_token": new_refresh_token,

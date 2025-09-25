@@ -26,6 +26,9 @@ class Service:
         limit: int = 100
     ):
         query = db.query(models.Service)
+        logger.info("Fetching services with filters: "
+                    f"price_min={price_min}, price_max={price_max}, active={active}, "
+                    f"skip={skip}, limit={limit}")
 
         if price_min is not None:
             query = query.filter(models.Service.price >= price_min)
