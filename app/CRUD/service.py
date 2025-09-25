@@ -43,6 +43,7 @@ class Service:
 
 
         services = query.order_by(models.Service.created_at.desc()).offset(skip).limit(limit).all()
+        logger.info(f"Retrieved {len(services)} services out of {total} total matching services")
 
         return services, total
 
