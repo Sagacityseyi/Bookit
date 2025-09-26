@@ -3,12 +3,13 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.security import get_user_by_email, get_password_hash
+from app.security import get_user_by_email, get_password_hash, get_current_user
 from app.schemas.user import UserCreate, UserOut, RefreshToken
 from .CRUD.auth import Auth_Service
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from .models import User
 
 security = HTTPBearer()
 
@@ -56,8 +57,19 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         )
 
 @auth_router.post("/refresh", status_code=status.HTTP_201_CREATED, response_model=dict)
-def refresh(request: RefreshToken, db: Session = Depends(get_db)):
-    return Auth_Service.refresh_token(db, request.refresh_token)
+def refresh(request: RefreshToken,
+            db: Session = Depends(get_db)
+            ):
+    try:
+        refresh_tokens = Auth_Service.refresh_token(db, request.refresh_token)
+        if not refresh_tokens:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid token"
+            )
+        return refresh_tokens
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 

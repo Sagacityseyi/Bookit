@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, ConfigDict
 
@@ -25,6 +26,9 @@ class User(UserBase):
     role: Role = Role.USER
     created_at: datetime
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
 
     model_config = ConfigDict(from_attributes=True)
 

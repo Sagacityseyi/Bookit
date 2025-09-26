@@ -40,28 +40,7 @@ def create_review(
             detail="Internal server error"
         )
 
-
-@review_router.get("/services/{service_id}/reviews", response_model=List[ReviewOut])
-def get_service_reviews(
-        skip: int = Query(0, ge=0, description="Number of records to skip"),
-        limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
-        db: Session = Depends(get_db)
-):
-    try:
-        logger.info(f"Fetching all reviews")
-
-        reviews = Review_Crud.get_all_reviews(db, skip, limit)
-        return reviews
-
-    except Exception as e:
-        logger.error(f"Error fetching all reviews id {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
-
-
-@review_router.get("service/{id}/review")
+@review_router.get("/service/{id}/review")
 def get_service_review(
         service_id: UUID,
         db: Session = Depends(get_db)

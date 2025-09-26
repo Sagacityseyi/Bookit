@@ -1,7 +1,10 @@
 import logging
+from uuid import UUID
+
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import values, except_
 from sqlalchemy.orm import Session
 from app import models
 from app.models import User, BlacklistedToken
