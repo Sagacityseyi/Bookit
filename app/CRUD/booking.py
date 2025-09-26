@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 import logging
+from fastapi import HTTPException, status
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -35,7 +36,9 @@ class Booking_Crud:
         ).first()
 
         if overlapping:
-            raise ValueError("Time slot is already booked")
+            raise HTTPException(
+                status_code = status.HTTP_409_CONFLICT,
+                detail="Time slot is already booked")
         
         logger.info("No overlapping bookings found")
 
@@ -109,13 +112,10 @@ class Booking_Crud:
 
         if user.role != Role.ADMIN and booking.user_id != user.id:
             raise PermissionError("Not authorized to update this booking")
-        
 
         now = datetime.now(timezone.utc)
         booking_start = Booking_Crud.ensure_timezone_aware(booking.start_time)
         is_rescheduling = update_data.start_time is not None
-        
-        
 
         if update_data.status is not None:
             if user.role != Role.ADMIN:
@@ -167,6 +167,7 @@ class Booking_Crud:
         db.commit()
         db.refresh(booking)
         return booking
+
 
     @staticmethod
     def complete_booking(db: Session, booking_id: UUID, admin_user: User) -> Optional[Booking]:

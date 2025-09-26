@@ -1,3 +1,4 @@
+from fastapi import  HTTPException, status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime, timezone
@@ -71,6 +72,22 @@ class Review_Crud:
         except Exception as e:
             logger.error(f"Error fetching all reviews: {str(e)}")
             raise
+
+    @staticmethod
+    def get_service_review(db: Session, service_id: UUID):
+            try:
+                logger.info(f"Checking review for service: {service_id}")
+                query = db.query(Review).filter(Review.service_id == service_id).first()
+
+                if not query:
+                    raise HTTPException(
+                        status_code= status.HTTP_404_NOT_FOUND,
+                        detail="service not found"
+                    )
+                return query
+            except Exception as e:
+                logger.error("error in fetching review service")
+                raise
 
     @staticmethod
     def get_review(db: Session, review_id: UUID) -> Optional[Review]:

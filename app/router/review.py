@@ -61,6 +61,25 @@ def get_service_reviews(
         )
 
 
+@review_router.get("service/{id}/review")
+def get_service_review(
+        service_id: UUID,
+        db: Session = Depends(get_db)
+):
+    try:
+        service_review = Review_Crud.get_service_review(db, service_id)
+        if not service_review:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review service not found"
+            )
+        return service_review
+
+    except Exception as e:
+        raise
+
+
+
 @review_router.patch("/{review_id}", response_model=ReviewOut)
 def update_review(
         review_id: UUID,
