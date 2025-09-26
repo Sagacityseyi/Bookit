@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, ConfigDict
 
 class ServiceBase(BaseModel):
     title: str
@@ -23,13 +22,12 @@ class ServiceOut(BaseModel):
     id: UUID
     title: str
     description: str
-    price: int
+    price: float
     duration_minutes: int
     is_active: bool = True
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ServiceUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=100)
@@ -38,6 +36,5 @@ class ServiceUpdate(BaseModel):
     duration_minutes: Optional[int] = Field(None, gt=0)
     is_active: Optional[bool] = None
 
-    model_config = {
-        "from_attributes": True
-    }
+
+    model_config = ConfigDict(from_attributes=True)

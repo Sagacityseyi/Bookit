@@ -32,16 +32,13 @@ class UserUpdate(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class UserOut(BaseModel):
     id: UUID
     name: str
     email: EmailStr
     created_at: datetime
 
-
     model_config = ConfigDict(from_attributes=True)
-
 
 class Token(BaseModel):
     access_token: str

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from enum import Enum
 
 
@@ -20,7 +20,8 @@ class BookingBase(BaseModel):
 
 class BookingCreate(BookingBase):
     @field_validator('start_time')
-    def validate_start_time(cls, v):
+    @classmethod
+    def validate_start_time(cls, v: datetime) -> datetime:
         now = datetime.now(timezone.utc)
         if v.tzinfo is None:
             v = v.replace(tzinfo=timezone.utc)
@@ -45,8 +46,6 @@ class BookingUpdate(BaseModel):
     start_time: Optional[datetime] = None
 
 
-
-
 class BookingOut(BookingBase):
     id: UUID
     user_id: UUID
@@ -54,8 +53,7 @@ class BookingOut(BookingBase):
     status: BookingStatus
     created_at: datetime
 
-
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)  # v2 syntax
 
 
 class BookingFilter(BaseModel):
