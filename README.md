@@ -31,9 +31,13 @@ Create .env file:
 
 # 📋 Environment Variables
 DATABASE_URL=
+
 SECRET_KEY = 
-ALGORITHM = 
+
+ALGORITHM =
+
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 REFRESH_TOKEN_EXPIRES = 10
 
 # 📥Run Application
@@ -42,8 +46,11 @@ uvicorn app.main:app --reload
 
 # 🌐 Deployment
 Host: Render.com
+
 Database: Render PostgreSQL
+
 Base URL: https://bookit-my4c.onrender.com
+
 Docs: https://bookit-my4c.onrender.com/docs
 
 
@@ -51,13 +58,18 @@ Docs: https://bookit-my4c.onrender.com/docs
 if you are running it on render host for easier access:
 
 ADMIN
+
 email: user2@example.com
+
 password: string
 
 USER:
+
 email: user@example.com
+
 password: string
 
 # REVIEW ID
-5ed2e036-e33d-451d-9aaf-a08a8d1f0000
-48122f7b-ce20-4106-a13e-dfb3475eb0ed
+
+*5ed2e036-e33d-451d-9aaf-a08a8d1f0000*
+*48122f7b-ce20-4106-a13e-dfb3475eb0ed*
