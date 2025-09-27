@@ -71,5 +71,6 @@ password: string
 
 # REVIEW ID
 
-*5ed2e036-e33d-451d-9aaf-a08a8d1f0000*
-*48122f7b-ce20-4106-a13e-dfb3475eb0ed*
+5ed2e036-e33d-451d-9aaf-a08a8d1f0000
+
+48122f7b-ce20-4106-a13e-dfb3475eb0ed
