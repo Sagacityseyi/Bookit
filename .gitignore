@@ -1,3 +1,4 @@
 /BookIt/.env
 /.env
 /app.log
+/venv/
