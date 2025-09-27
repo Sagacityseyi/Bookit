@@ -57,8 +57,6 @@ def get_service_review(
     except Exception as e:
         raise
 
-
-
 @review_router.patch("/{review_id}", response_model=ReviewOut)
 def update_review(
         review_id: UUID,

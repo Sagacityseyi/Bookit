@@ -5,7 +5,36 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8e62a267-9d60-4574-9a65-cb140a74f21e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/router/review.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/router/review.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/_pydantic_core.cp313-win_amd64.pyd" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/_pydantic_core.cp313-win_amd64.pyd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/_pydantic_core.pyi" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/_pydantic_core.pyi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/core_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/pydantic_core/core_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/lifespan/on.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/lifespan/on.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/logging.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/logging.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/loops/asyncio.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/loops/asyncio.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/loops/auto.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/loops/auto.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/loops/uvloop.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/loops/uvloop.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/middleware/proxy_headers.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/middleware/proxy_headers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/middleware/wsgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/middleware/wsgi.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/http/h11_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/http/h11_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/http/httptools_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/http/httptools_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/websockets/auto.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/websockets/auto.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/websockets/websockets_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/websockets/websockets_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/websockets/wsproto_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/protocols/websockets/wsproto_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/basereload.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/basereload.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/multiprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/multiprocess.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/statreload.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/statreload.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/watchfilesreload.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/supervisors/watchfilesreload.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/workers.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/uvicorn/workers.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
